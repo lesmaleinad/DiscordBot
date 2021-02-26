@@ -174,4 +174,4 @@ client.once("shardDisconnect", () => {
   client.destroy();
 });
 
-client.login("ODEyODYwMDkxNzU3MjMyMjAw.YDG49A.CyeYwzwQ3FMVOM6WCfuwMxX7uts");
+client.login(process.env.DISCORD_CLIENT_KEY);
