@@ -1,5 +1,5 @@
 {
-  "name": "OceanCurse",
+  "name": "oceancurse",
   "version": "1.0.0",
   "description": "Curse of the OceanMan",
   "main": "index.js",
@@ -12,6 +12,7 @@
   "dependencies": {
     "@discordjs/opus": "^0.4.0",
     "discord.js": "^12.5.1",
+    "dotenv": "^16.0.0",
     "ytdl-core": "^4.5.0",
     "ytdl-core-discord": "^1.2.5"
   },

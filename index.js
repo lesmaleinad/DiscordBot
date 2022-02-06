@@ -1,5 +1,6 @@
 const Discord = require("discord.js");
 const ytdl = require("ytdl-core-discord");
+require("dotenv").config();
 const client = new Discord.Client();
 
 // Guilds
@@ -15,8 +16,9 @@ const magnat = "490700636665413652";
 const flyguy = "225467704948162561";
 const dan = "319918516310376448";
 const swensey = "118949183662194688";
+const hazard = "132245743023947776";
 
-let prank = true;
+let prank2 = true;
 
 let cursedMember = dan;
 
@@ -46,6 +48,16 @@ function getRandomMan() {
     "https://youtu.be/BfSvnzWAm6Q",
     "https://youtu.be/CVi39Rl3GLI",
     "https://youtu.be/QFwq3CI1Jw0",
+    "https://www.youtube.com/watch?v=8Oob96u2cOg",
+    "https://www.youtube.com/watch?v=91nTBwkqG2k",
+    "https://www.youtube.com/watch?v=A7LlJzEeI14",
+    "https://www.youtube.com/watch?v=-W6abbyFQe0",
+    "https://www.youtube.com/watch?v=49F1QWAl_u0",
+    "https://www.youtube.com/watch?v=Mbu2KRC0wxg",
+    "https://www.youtube.com/watch?v=I3lVZVWCdOo",
+    "https://www.youtube.com/watch?v=vEyNlGXuqiw",
+    "https://www.youtube.com/watch?v=BEc5hVMGcHw",
+    "https://www.youtube.com/watch?v=ya-733fydeI",
   ];
 
   return items[Math.floor(Math.random() * items.length)];
@@ -72,12 +84,7 @@ function guildEmoji(guild, emojiName) {
 client.on("voiceStateUpdate", (oldState, newState) => {
   const channel = newState.channel;
 
-  if (
-    channel &&
-    !oldState.channel &&
-    channel.id === gamenightGeneral &&
-    newState.member.id === cursedMember
-  ) {
+  if (channel.id === gamenightGeneral && newState.member.id === cursedMember) {
     startOceanMan(
       channel,
       `Deploying OceanCurse for ${newState.member.displayName}.`
@@ -89,7 +96,16 @@ client.on("message", async (message) => {
   const generalVoice = await client.channels.fetch(gamenightGeneral);
   const content = message.toString().toLowerCase();
   if (message.guild && message.guild.id === gamenight && !message.author.bot) {
-    if (content === "ocean stop") {
+    if (
+      prank2 &&
+      (message.author.id === hazard || message.author.id === swensey) &&
+      content.slice(0, 2) === "-p" &&
+      content.toLowerCase() !== "-p ocean man"
+    ) {
+      prank2 = false;
+      await message.channel.send("That's a weird way to spell Ocean Man");
+      client.setTimeout(() => startOceanMan(generalVoice), 2 * 1000);
+    } else if (content === "ocean stop") {
       switch (message.author.id) {
         case magnat:
           try {
@@ -102,17 +118,15 @@ client.on("message", async (message) => {
             console.log(error);
           }
           break;
-        case swensey:
-          if (prank) {
-            prank = false;
-            await message.react(guildEmoji(message.guild, "No"));
-            await message.reply("no");
-            client.setTimeout(async () => {
-              await message.channel.send("In fact, just because you asked");
-              client.setTimeout(() => startOceanMan(generalVoice), 1 * 1000);
-            }, 2 * 1000);
-            break;
-          }
+        case flyguy:
+          await message.react(guildEmoji(message.guild, "No"));
+          await message.reply("no");
+          client.setTimeout(async () => {
+            await message.channel.send("In fact, just because you asked");
+            client.setTimeout(() => startOceanMan(generalVoice), 1 * 1000);
+          }, 2 * 1000);
+          break;
+
         default:
           await message.react(guildEmoji(message.guild, "notstonks"));
           await message.reply("no");
@@ -125,14 +139,15 @@ client.on("message", async (message) => {
         const user = await message.guild.members.fetch(cursedMember);
         const reply = await message.reply(
           `The curse is on ${
-            user ? user.displayName : "UNKOWN"
+            user ? user.displayName : "UNKNOWN"
           }. Self destruct in 15 seconds.`
         );
         client.setTimeout(() => {
           reply.delete();
         }, 15 * 1000);
       } else {
-        await message.react(guildEmoji(message.guild, "stupid"));
+        await message.react(guildEmoji(message.guild, "bonk"));
+        await message.react(guildEmoji(message.guild, "bonked"));
         await message.reply(
           "You have to join the general voice channel to see who has the curse."
         );
@@ -174,4 +189,4 @@ client.once("shardDisconnect", () => {
   client.destroy();
 });
 
-client.login(process.env.DISCORD_CLIENT_KEY);
+client.login(process.env.DISCORD_CLIENT_KEY).catch(console.error);
