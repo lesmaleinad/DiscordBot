@@ -5,3 +5,13 @@ export const BotPlayground = {
         Voice: '989753091425468450',
     },
 } as const;
+
+export const GameNight = {
+    Guild: '617415978011066400',
+    General: {
+        Voice: '617415978011066410',
+    },
+    BotSoup: {
+        Text: '698615585264762941',
+    },
+} as const;
