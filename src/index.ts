@@ -1,7 +1,7 @@
 import { generateDependencyReport } from '@discordjs/voice';
 import { Client, Intents } from 'discord.js';
 import { config } from 'dotenv';
-import fastify from 'fastify';
+import express from 'express';
 import { exit } from 'process';
 import { PlayOceanManHandler } from './bots/messagehandlers/playoceanman.handler';
 import { OceanCurse } from './bots/oceancurse';
@@ -37,17 +37,18 @@ process.on('SIGTERM', () => {
     exit(0);
 });
 
-const server = fastify();
-server.get('*', () => {
-    return 'Server online!';
+const server = express();
+server.get('/*', (_, res) => {
+    res.send('Server online!');
 });
 
 const port = process.env['PORT'] ? parseInt(process.env['PORT']) : 8000;
-console.log('Server listening on port: ' + port);
 
 async function main() {
     try {
-        await server.listen({ port });
+        server.listen(port, () =>
+            console.log('Server listening on port: ' + port)
+        );
         await client.login(process.env['DISCORD_CLIENT_KEY']);
     } catch (e) {
         console.error('Failed to start up');
