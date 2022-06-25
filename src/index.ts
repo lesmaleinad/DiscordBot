@@ -32,7 +32,6 @@ client.on('messageCreate', async (message) => {
     oceanCurse.onMessage(message);
 });
 
-client.login(process.env['DISCORD_CLIENT_KEY']);
 process.on('SIGTERM', () => {
     client.destroy();
     exit(0);
@@ -43,5 +42,17 @@ server.get('*', () => {
     return 'Server online!';
 });
 
-const port = process.env['PORT'] && parseInt(process.env['PORT']);
-server.listen({ port: port || 8000 });
+const port = process.env['PORT'] ? parseInt(process.env['PORT']) : 8000;
+console.log('Server listening on port: ' + port);
+
+async function main() {
+    try {
+        await server.listen({ port });
+        await client.login(process.env['DISCORD_CLIENT_KEY']);
+    } catch (e) {
+        console.error('Failed to start up');
+        console.error(e);
+    }
+}
+
+main();
