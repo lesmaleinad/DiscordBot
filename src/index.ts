@@ -42,7 +42,8 @@ server.get('/*', (_, res) => {
     res.send('Server online!');
 });
 
-const port = process.env['PORT'] ? parseInt(process.env['PORT']) : 8000;
+console.log(process.argv);
+const port = process.argv[2] ? parseInt(process.argv[2]) : 8000;
 
 async function main() {
     try {
