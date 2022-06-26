@@ -17,3 +17,5 @@ export const GameNight = {
 } as const;
 
 export const Daniel = '319918516310376448';
+export const Magnat = '490700636665413652';
+export const FlyGuy = '225467704948162561';
