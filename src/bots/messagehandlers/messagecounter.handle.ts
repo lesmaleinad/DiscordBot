@@ -1,5 +1,5 @@
 import { Message, Client } from 'discord.js';
-import { playOceanMan, sendMessageToTextChannel } from '../../actions/oceanman';
+import { playOceanMan } from '../../actions/oceanman';
 import { MessageHandler } from '../messagehandler.base';
 import { OceanCurse } from '../oceancurse';
 
@@ -8,15 +8,13 @@ export class MessageCounterHandler implements MessageHandler {
 
     public async handle(
         message: Message<boolean>,
-        client: Client<boolean>,
+        _client: Client<boolean>,
         oceanCurse: OceanCurse
     ) {
         if (message.member && !message.author.bot) {
             this.count++;
             if (this.count % 300 === 0) {
-                sendMessageToTextChannel(
-                    client,
-                    oceanCurse.defaultTextChannelId,
+                oceanCurse.sendToDefaultTextChannel(
                     `${message.member.displayName} sent the 300th message! Deploying Ocean Man!`
                 );
                 playOceanMan(
@@ -25,6 +23,12 @@ export class MessageCounterHandler implements MessageHandler {
                     message.member.guild.voiceAdapterCreator
                 );
             }
+        }
+
+        if (message.content.toLowerCase() === 'ocean count') {
+            oceanCurse.sendToDefaultTextChannel(
+                `I have counted ${this.count} messages.`
+            );
         }
 
         return false;

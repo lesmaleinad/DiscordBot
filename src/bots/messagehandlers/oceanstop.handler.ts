@@ -1,6 +1,6 @@
 import { getVoiceConnection } from '@discordjs/voice';
 import { Message, Client } from 'discord.js';
-import { playOceanMan, sendMessageToTextChannel } from '../../actions/oceanman';
+import { playOceanMan } from '../../actions/oceanman';
 import { FlyGuy, Magnat } from '../../ids';
 import { wait } from '../../utils';
 import { MessageHandler } from '../messagehandler.base';
@@ -32,9 +32,7 @@ export class OceanStopHandler implements MessageHandler {
                 case FlyGuy:
                     await message.reply('no');
                     await wait(10 * 1000);
-                    await sendMessageToTextChannel(
-                        client,
-                        message.channelId,
+                    await oceanCurse.sendToDefaultTextChannel(
                         'In fact, just because you asked'
                     );
                     playOceanMan(

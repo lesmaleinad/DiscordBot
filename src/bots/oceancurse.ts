@@ -1,4 +1,5 @@
 import { Client, Message, VoiceState } from 'discord.js';
+import { sendMessageToTextChannel } from '../actions/oceanman';
 import { BotPlayground, GameNight } from '../ids';
 import { MessageHandler } from './messagehandler.base';
 import { VoiceStateHandler } from './voicestatehandler';
@@ -61,5 +62,13 @@ export class OceanCurse {
                 }
             }
         }
+    }
+
+    public async sendToDefaultTextChannel(text: string) {
+        return sendMessageToTextChannel(
+            this.client,
+            this.defaultTextChannelId,
+            text
+        );
     }
 }

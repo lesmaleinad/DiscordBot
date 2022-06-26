@@ -1,5 +1,5 @@
 import { Client, Message, VoiceState } from 'discord.js';
-import { playOceanMan, sendMessageToTextChannel } from '../../actions/oceanman';
+import { playOceanMan } from '../../actions/oceanman';
 import { channelIsVoiceChannel, fetchChannel } from '../../validators/channel';
 import { MessageHandler } from '../messagehandler.base';
 import { OceanCurse } from '../oceancurse';
@@ -9,20 +9,19 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
     constructor(private cursedMemberId: string) {}
 
     public async handleVoiceChange(
-        _: VoiceState,
+        oldState: VoiceState,
         newState: VoiceState,
-        client: Client,
+        _client: Client,
         oceanCurse: OceanCurse
     ): Promise<boolean> {
         const channel = newState.channel;
 
         if (
+            oldState.channelId !== oceanCurse.defaultVoiceChannelId &&
             channel?.id === oceanCurse.defaultVoiceChannelId &&
             newState.member?.id === this.cursedMemberId
         ) {
-            sendMessageToTextChannel(
-                client,
-                oceanCurse.defaultTextChannelId,
+            oceanCurse.sendToDefaultTextChannel(
                 `Deploying OceanCurse for ${newState.member.displayName}.`
             );
             playOceanMan(
@@ -77,15 +76,13 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
                     `The curse is on ${cursedMember.displayName}. Self destruct in 15 seconds.`
                 );
             } else {
-                sendMessageToTextChannel(
-                    client,
-                    channelId,
+                oceanCurse.sendToDefaultTextChannel(
                     'You have to join the general voice channel to see who has the curse.'
                 );
             }
         } else {
             try {
-                const [_, __, curseInput] = content.split(' ');
+                const curseInput = content.split(' ')[2];
                 if (!curseInput) {
                     throw new Error('newCursedMember not specified');
                 }
@@ -109,9 +106,7 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
                 );
             } catch (e) {
                 console.error(e);
-                sendMessageToTextChannel(
-                    client,
-                    channelId,
+                oceanCurse.sendToDefaultTextChannel(
                     "That curse didn't work. Curses only work like this: 'ocean curse <id OR tagname>'"
                 );
             }
