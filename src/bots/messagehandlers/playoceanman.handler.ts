@@ -14,7 +14,7 @@ export class PlayOceanManHandler implements MessageHandler {
         if (
             guild?.id === oceanCurse.defaultGuildId &&
             !message.author.bot &&
-            content.includes('ocean man')
+            content.toLowerCase().includes('ocean man')
         ) {
             await sendMessageToTextChannel(
                 client,
