@@ -2,6 +2,7 @@ import { generateDependencyReport } from '@discordjs/voice';
 import { Client, Intents, Message, VoiceState } from 'discord.js';
 import { config } from 'dotenv';
 import { exit } from 'process';
+import { MessageCounterHandler } from './bots/messagehandlers/messagecounter.handle';
 import { OceanCurseHandler } from './bots/messagehandlers/oceancurse.handler';
 import { OceanStopHandler } from './bots/messagehandlers/oceanstop.handler';
 import { PlayOceanManHandler } from './bots/messagehandlers/playoceanman.handler';
@@ -24,7 +25,12 @@ const oceanCurseHandler = new OceanCurseHandler(Daniel);
 
 const oceanCurse = new OceanCurse(
     client,
-    [new PlayOceanManHandler(), oceanCurseHandler, new OceanStopHandler()],
+    [
+        new PlayOceanManHandler(),
+        new MessageCounterHandler(),
+        oceanCurseHandler,
+        new OceanStopHandler(),
+    ],
     [oceanCurseHandler],
     !!process.env['STAGING']
 );
