@@ -45,7 +45,7 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
 
         if (
             !guild ||
-            !content.startsWith('ocean curse') ||
+            !content.toLowerCase().startsWith('ocean curse') ||
             channelId !== oceanCurse.defaultTextChannelId
         ) {
             return false;
@@ -61,7 +61,7 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
             }, timeout);
         }
 
-        if (content === 'ocean curse') {
+        if (content.toLowerCase() === 'ocean curse') {
             const requiredVoiceChannel = await fetchChannel(
                 client,
                 oceanCurse.defaultVoiceChannelId,
