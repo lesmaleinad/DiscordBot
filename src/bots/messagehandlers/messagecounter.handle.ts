@@ -4,11 +4,12 @@ import { OceanCurse } from '../oceancurse';
 
 export class MessageCounterHandler implements MessageHandler {
     private count = 0;
+    private readonly countToPlayOceanMan = 300;
 
     public async handle(message: Message<boolean>, oceanCurse: OceanCurse) {
         if (message.member && !message.author.bot) {
             this.count++;
-            if (this.count % 300 === 0) {
+            if (this.count % this.countToPlayOceanMan === 0) {
                 await oceanCurse.sendToDefaultTextChannel(
                     `${message.member.displayName} sent the 300th message! Deploying Ocean Man!`
                 );
@@ -18,7 +19,10 @@ export class MessageCounterHandler implements MessageHandler {
 
         if (message.content.toLowerCase() === 'ocean count') {
             oceanCurse.sendToDefaultTextChannel(
-                `I have counted ${this.count} messages.`
+                `I have counted ${this.count} messages. Only ${
+                    this.countToPlayOceanMan -
+                    (this.count % this.countToPlayOceanMan)
+                } left to go!`
             );
         }
 
