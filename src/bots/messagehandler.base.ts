@@ -1,4 +1,4 @@
-import { Message, Client } from 'discord.js';
+import { Message } from 'discord.js';
 import { OceanCurse } from './oceancurse';
 
 export interface MessageHandler {
@@ -9,7 +9,6 @@ export interface MessageHandler {
      */
     handle(
         message: Message,
-        client: Client,
         oceanCurse: OceanCurse
     ): boolean | Promise<boolean>;
 }

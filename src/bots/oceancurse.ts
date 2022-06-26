@@ -1,6 +1,7 @@
-import { Client, Message, VoiceState } from 'discord.js';
-import { sendMessageToTextChannel } from '../actions/oceanman';
+import { Client, Message, VoiceChannel, VoiceState } from 'discord.js';
+import { playOceanMan, sendMessageToTextChannel } from '../actions/oceanman';
 import { BotPlayground, GameNight } from '../ids';
+import { channelIsVoiceChannel, fetchChannel } from '../validators/channel';
 import { MessageHandler } from './messagehandler.base';
 import { VoiceStateHandler } from './voicestatehandler';
 
@@ -24,11 +25,7 @@ export class OceanCurse {
 
     public async onMessage(message: Message) {
         for (const messageHandler of this.messageHandlers) {
-            const shouldTerminate = messageHandler.handle(
-                message,
-                this.client,
-                this
-            );
+            const shouldTerminate = messageHandler.handle(message, this);
             if (typeof shouldTerminate === 'boolean') {
                 if (shouldTerminate) {
                     break;
@@ -49,7 +46,6 @@ export class OceanCurse {
             const shouldTerminate = handler.handleVoiceChange(
                 oldState,
                 newState,
-                this.client,
                 this
             );
             if (typeof shouldTerminate === 'boolean') {
@@ -62,6 +58,23 @@ export class OceanCurse {
                 }
             }
         }
+    }
+
+    public async getDefaultVoiceChannel(): Promise<VoiceChannel> {
+        return fetchChannel(
+            this.client,
+            this.defaultVoiceChannelId,
+            channelIsVoiceChannel
+        );
+    }
+
+    public async playOceanMan() {
+        const voiceChannel = await this.getDefaultVoiceChannel();
+        return playOceanMan(
+            voiceChannel.id,
+            voiceChannel.guildId,
+            voiceChannel.guild.voiceAdapterCreator
+        );
     }
 
     public async sendToDefaultTextChannel(text: string) {

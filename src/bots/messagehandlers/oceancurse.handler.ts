@@ -1,6 +1,4 @@
-import { Client, Message, VoiceState } from 'discord.js';
-import { playOceanMan } from '../../actions/oceanman';
-import { channelIsVoiceChannel, fetchChannel } from '../../validators/channel';
+import { Message, VoiceState } from 'discord.js';
 import { MessageHandler } from '../messagehandler.base';
 import { OceanCurse } from '../oceancurse';
 import { VoiceStateHandler } from '../voicestatehandler';
@@ -11,7 +9,6 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
     public async handleVoiceChange(
         oldState: VoiceState,
         newState: VoiceState,
-        _client: Client,
         oceanCurse: OceanCurse
     ): Promise<boolean> {
         const channel = newState.channel;
@@ -21,14 +18,10 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
             channel?.id === oceanCurse.defaultVoiceChannelId &&
             newState.member?.id === this.cursedMemberId
         ) {
-            oceanCurse.sendToDefaultTextChannel(
+            await oceanCurse.sendToDefaultTextChannel(
                 `Deploying OceanCurse for ${newState.member.displayName}.`
             );
-            playOceanMan(
-                oceanCurse.defaultVoiceChannelId,
-                oceanCurse.defaultGuildId,
-                newState.guild.voiceAdapterCreator
-            );
+            oceanCurse.playOceanMan();
             return true;
         }
 
@@ -37,7 +30,6 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
 
     public async handle(
         message: Message,
-        client: Client,
         oceanCurse: OceanCurse
     ): Promise<boolean> {
         const { author, content, guild, channelId } = message;
@@ -61,11 +53,8 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
         }
 
         if (content.toLowerCase() === 'ocean curse') {
-            const requiredVoiceChannel = await fetchChannel(
-                client,
-                oceanCurse.defaultVoiceChannelId,
-                channelIsVoiceChannel
-            );
+            const requiredVoiceChannel =
+                await oceanCurse.getDefaultVoiceChannel();
 
             if (requiredVoiceChannel.members.has(author.id)) {
                 const cursedMember = await guild.members.fetch(

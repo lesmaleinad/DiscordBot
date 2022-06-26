@@ -1,12 +1,10 @@
-import { Client, Message } from 'discord.js';
-import { playOceanMan } from '../../actions/oceanman';
+import { Message } from 'discord.js';
 import { MessageHandler } from '../messagehandler.base';
 import { OceanCurse } from '../oceancurse';
 
 export class PlayOceanManHandler implements MessageHandler {
     public async handle(
         message: Message,
-        client: Client,
         oceanCurse: OceanCurse
     ): Promise<boolean> {
         const { content, guild } = message;
@@ -17,11 +15,7 @@ export class PlayOceanManHandler implements MessageHandler {
             content.toLowerCase().includes('ocean man')
         ) {
             await oceanCurse.sendToDefaultTextChannel('Deploying Ocean Man...');
-            playOceanMan(
-                oceanCurse.defaultVoiceChannelId,
-                oceanCurse.defaultGuildId,
-                guild.voiceAdapterCreator
-            );
+            oceanCurse.playOceanMan();
 
             return true;
         }

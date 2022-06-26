@@ -1,6 +1,5 @@
 import { getVoiceConnection } from '@discordjs/voice';
-import { Message, Client } from 'discord.js';
-import { playOceanMan } from '../../actions/oceanman';
+import { Message } from 'discord.js';
 import { FlyGuy, Magnat } from '../../ids';
 import { wait } from '../../utils';
 import { MessageHandler } from '../messagehandler.base';
@@ -9,11 +8,9 @@ import { OceanCurse } from '../oceancurse';
 export class OceanStopHandler implements MessageHandler {
     public async handle(
         message: Message,
-        client: Client,
         oceanCurse: OceanCurse
     ): Promise<boolean> {
         if (
-            client.user &&
             message.guild &&
             message.channelId === oceanCurse.defaultTextChannelId &&
             message.content === 'ocean stop'
@@ -35,11 +32,7 @@ export class OceanStopHandler implements MessageHandler {
                     await oceanCurse.sendToDefaultTextChannel(
                         'In fact, just because you asked'
                     );
-                    playOceanMan(
-                        oceanCurse.defaultVoiceChannelId,
-                        oceanCurse.defaultGuildId,
-                        message.guild.voiceAdapterCreator
-                    );
+                    oceanCurse.playOceanMan();
                     break;
                 default:
                     message.reply('no');

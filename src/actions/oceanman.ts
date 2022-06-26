@@ -23,48 +23,55 @@ export function playOceanMan(
     guildId: string,
     adapter: InternalDiscordGatewayAdapterCreator
 ) {
-    const connection = joinVoiceChannel({
-        channelId: channelId,
-        guildId: guildId,
-        adapterCreator: adapter,
-        selfDeaf: false,
-    });
-    const timeout = setTimeout(() => {
-        try {
-            console.log('Timed out after 10 minutes');
-            connection.destroy();
-        } catch (e) {
-            console.log(e);
-        }
-    }, 10 * 60 * 1000);
-
-    try {
-        const player = createAudioPlayer();
-        player.on('error', (e) => {
-            console.error(e);
+    return new Promise<void>((resolve) => {
+        const connection = joinVoiceChannel({
+            channelId: channelId,
+            guildId: guildId,
+            adapterCreator: adapter,
+            selfDeaf: false,
         });
-        connection.subscribe(player);
-
-        const link = getRandomMan();
-        const stream = ytdl(link, {
-            highWaterMark: 1024 * 1024 * 10,
-            filter: 'audioonly',
-            quality: 'lowestaudio',
-        });
-        const resource = createAudioResource(stream);
-        player.play(resource);
-
-        player.on(AudioPlayerStatus.Idle, () => {
+        const timeout = setTimeout(() => {
             try {
-                clearTimeout(timeout);
+                console.error('Timed out after 10 minutes');
                 connection.destroy();
             } catch (e) {
                 console.log(e);
+            } finally {
+                resolve();
             }
-        });
-    } catch (e) {
-        console.error(e);
-        clearTimeout(timeout);
-        connection.destroy();
-    }
+        }, 10 * 60 * 1000);
+
+        try {
+            const player = createAudioPlayer();
+            player.on('error', (e) => {
+                console.error(e);
+            });
+            connection.subscribe(player);
+
+            const link = getRandomMan();
+            const stream = ytdl(link, {
+                highWaterMark: 1024 * 1024 * 10,
+                filter: 'audioonly',
+                quality: 'lowestaudio',
+            });
+            const resource = createAudioResource(stream);
+            player.play(resource);
+
+            player.on(AudioPlayerStatus.Idle, () => {
+                try {
+                    clearTimeout(timeout);
+                    connection.destroy();
+                } catch (e) {
+                    console.log(e);
+                } finally {
+                    resolve();
+                }
+            });
+        } catch (e) {
+            console.error(e);
+            clearTimeout(timeout);
+            connection.destroy();
+            resolve();
+        }
+    });
 }
