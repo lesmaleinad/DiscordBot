@@ -1,13 +1,13 @@
 import { Message, Client } from 'discord.js';
 import { OceanCurse } from './oceancurse';
 
-export abstract class MessageHandler {
+export interface MessageHandler {
     /**
      *
      * @param message message recieved from server
      * @returns true if handling should terminate, false if the next handler should be applied
      */
-    public abstract handle(
+    handle(
         message: Message,
         client: Client,
         oceanCurse: OceanCurse

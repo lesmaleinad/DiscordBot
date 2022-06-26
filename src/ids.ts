@@ -15,3 +15,5 @@ export const GameNight = {
         Text: '698615585264762941',
     },
 } as const;
+
+export const Daniel = '319918516310376448';
