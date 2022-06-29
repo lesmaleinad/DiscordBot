@@ -69,6 +69,11 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
                     'You have to join the general voice channel to see who has the curse.'
                 );
             }
+        } else if (message.author.id !== this.cursedMemberId) {
+            await replyAndDelete(
+                "You can't curse someone, you aren't the one who is cursed! Self destruct in 15 seconds."
+            );
+            oceanCurse.playOceanMan();
         } else {
             try {
                 const curseInput = content.split(' ')[2];
