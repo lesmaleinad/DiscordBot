@@ -1,4 +1,4 @@
-import { Client, VoiceState } from 'discord.js';
+import { VoiceState } from 'discord.js';
 import { OceanCurse } from './oceancurse';
 
 export interface VoiceStateHandler {

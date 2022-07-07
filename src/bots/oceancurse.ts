@@ -24,17 +24,21 @@ export class OceanCurse {
         : GameNight.BotSoup.Text;
 
     public async onMessage(message: Message) {
-        for (const messageHandler of this.messageHandlers) {
-            const shouldTerminate = messageHandler.handle(message, this);
-            if (typeof shouldTerminate === 'boolean') {
-                if (shouldTerminate) {
-                    break;
-                }
-            } else {
-                if (await shouldTerminate) {
-                    break;
+        try {
+            for (const messageHandler of this.messageHandlers) {
+                const shouldTerminate = messageHandler.handle(message, this);
+                if (typeof shouldTerminate === 'boolean') {
+                    if (shouldTerminate) {
+                        break;
+                    }
+                } else {
+                    if (await shouldTerminate) {
+                        break;
+                    }
                 }
             }
+        } catch (e) {
+            console.error(e);
         }
     }
 
@@ -42,21 +46,25 @@ export class OceanCurse {
         oldState: VoiceState,
         newState: VoiceState
     ) {
-        for (const handler of this.voiceStateHandlers) {
-            const shouldTerminate = handler.handleVoiceChange(
-                oldState,
-                newState,
-                this
-            );
-            if (typeof shouldTerminate === 'boolean') {
-                if (shouldTerminate) {
-                    break;
-                }
-            } else {
-                if (await shouldTerminate) {
-                    break;
+        try {
+            for (const handler of this.voiceStateHandlers) {
+                const shouldTerminate = handler.handleVoiceChange(
+                    oldState,
+                    newState,
+                    this
+                );
+                if (typeof shouldTerminate === 'boolean') {
+                    if (shouldTerminate) {
+                        break;
+                    }
+                } else {
+                    if (await shouldTerminate) {
+                        break;
+                    }
                 }
             }
+        } catch (e) {
+            console.error(e);
         }
     }
 

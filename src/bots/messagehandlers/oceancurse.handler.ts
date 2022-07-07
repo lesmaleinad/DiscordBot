@@ -48,7 +48,13 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
         ) {
             const replyToDelete = await message.reply(reply);
             setTimeout(() => {
-                replyToDelete.delete();
+                try {
+                    replyToDelete.delete();
+                } catch (e) {
+                    console.error('*** ERROR WHILE DELETING MESSAGE ***');
+                    console.error(`*** REPLY: ${reply} ***`);
+                    console.error(e);
+                }
             }, timeout);
         }
 
