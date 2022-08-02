@@ -1,4 +1,5 @@
 import { Message, VoiceState } from 'discord.js';
+import { wait } from '../../utils';
 import { MessageHandler } from '../messagehandler.base';
 import { OceanCurse } from '../oceancurse';
 import { VoiceStateHandler } from '../voicestatehandler';
@@ -47,15 +48,14 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
             timeout: number = 15 * 1000
         ) {
             const replyToDelete = await message.reply(reply);
-            setTimeout(() => {
-                try {
-                    replyToDelete.delete();
-                } catch (e) {
-                    console.error('*** ERROR WHILE DELETING MESSAGE ***');
-                    console.error(`*** REPLY: ${reply} ***`);
-                    console.error(e);
-                }
-            }, timeout);
+            try {
+                await wait(timeout);
+                await replyToDelete.delete();
+            } catch (e) {
+                console.error('*** ERROR WHILE DELETING MESSAGE ***');
+                console.error(`*** REPLY: ${reply} ***`);
+                console.error(e);
+            }
         }
 
         if (content.toLowerCase() === 'ocean curse') {
@@ -67,7 +67,7 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
                     this.cursedMemberId
                 );
 
-                replyAndDelete(
+                await replyAndDelete(
                     `The curse is on ${cursedMember.displayName}. Self destruct in 15 seconds.`
                 );
             } else {
@@ -101,7 +101,7 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
                 }
 
                 this.cursedMemberId = newCursedMember.user.id;
-                replyAndDelete(
+                await replyAndDelete(
                     `Cursing ${newCursedMember.displayName}. Self destruct in 15 seconds.`
                 );
             } catch (e) {
