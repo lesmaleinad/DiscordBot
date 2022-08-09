@@ -7,7 +7,6 @@ import { OceanCurseHandler } from './bots/messagehandlers/oceancurse.handler';
 import { OceanStopHandler } from './bots/messagehandlers/oceanstop.handler';
 import { PlayOceanManHandler } from './bots/messagehandlers/playoceanman.handler';
 import { OceanCurse } from './bots/oceancurse';
-import { Daniel } from './ids';
 
 config();
 
@@ -21,13 +20,13 @@ const client = new Client({
     ],
 });
 
-const oceanCurseHandler = new OceanCurseHandler(Daniel);
+const oceanCurseHandler = new OceanCurseHandler();
 
 const oceanCurse = new OceanCurse(
     client,
     [
-        new PlayOceanManHandler(),
         new MessageCounterHandler(),
+        new PlayOceanManHandler(),
         oceanCurseHandler,
         new OceanStopHandler(),
     ],

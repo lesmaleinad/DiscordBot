@@ -1,11 +1,25 @@
 import { Message, VoiceState } from 'discord.js';
+import { State, StateVar } from '../../actions/persistentence';
 import { wait } from '../../utils';
 import { MessageHandler } from '../messagehandler.base';
 import { OceanCurse } from '../oceancurse';
 import { VoiceStateHandler } from '../voicestatehandler';
 
 export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
-    constructor(private cursedMemberId: string) {}
+    constructor(
+        private _cursedMemberId: string = State.getState(
+            StateVar.CursedMemberId
+        )
+    ) {}
+
+    private set cursedMemberId(value: string) {
+        State.updateState({ [StateVar.CursedMemberId]: value });
+        this._cursedMemberId = value;
+    }
+
+    private get cursedMemberId() {
+        return this._cursedMemberId;
+    }
 
     public async handleVoiceChange(
         oldState: VoiceState,
