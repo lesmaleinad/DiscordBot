@@ -51,8 +51,7 @@ export function playOceanMan(
             const link = getRandomMan();
             const stream = ytdl(link, {
                 highWaterMark: 1024 * 1024 * 10,
-                filter: 'audioonly',
-                quality: 'lowestaudio',
+                filter: 'audio',
             });
             const resource = createAudioResource(stream);
             player.play(resource);
