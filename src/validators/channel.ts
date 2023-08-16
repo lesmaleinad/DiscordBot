@@ -1,22 +1,22 @@
-import { AnyChannel, Client, TextChannel, VoiceChannel } from 'discord.js';
+import { Channel, ChannelType, Client, TextChannel, VoiceChannel } from 'discord.js';
 
-export type ChannelValidator<T extends AnyChannel> = (
-    channel: AnyChannel
+export type ChannelValidator<T extends Channel> = (
+    channel: Channel
 ) => channel is T;
 
 export const channelIsTextChannel: ChannelValidator<TextChannel> = (
     channel
 ): channel is TextChannel => {
-    return channel.type === 'GUILD_TEXT';
+    return channel.type === ChannelType.GuildText;
 };
 
 export const channelIsVoiceChannel: ChannelValidator<VoiceChannel> = (
     channel
 ): channel is VoiceChannel => {
-    return channel.type === 'GUILD_VOICE';
+    return channel.type === ChannelType.GuildVoice;
 };
 
-export async function fetchChannel<T extends AnyChannel>(
+export async function fetchChannel<T extends Channel>(
     client: Client,
     id: string,
     validator: ChannelValidator<T>

@@ -30,16 +30,19 @@ export function playOceanMan(
             adapterCreator: adapter,
             selfDeaf: false,
         });
-        const timeout = setTimeout(() => {
-            try {
-                console.error('Timed out after 10 minutes');
-                connection.destroy();
-            } catch (e) {
-                console.log(e);
-            } finally {
-                resolve();
-            }
-        }, 10 * 60 * 1000);
+        const timeout = setTimeout(
+            () => {
+                try {
+                    console.error('Timed out after 10 minutes');
+                    connection.destroy();
+                } catch (e) {
+                    console.log(e);
+                } finally {
+                    resolve();
+                }
+            },
+            10 * 60 * 1000
+        );
 
         try {
             const player = createAudioPlayer();

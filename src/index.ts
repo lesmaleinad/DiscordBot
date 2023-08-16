@@ -1,5 +1,5 @@
 import { generateDependencyReport } from '@discordjs/voice';
-import { Client, Intents, Message, VoiceState } from 'discord.js';
+import { Client, IntentsBitField, Message, VoiceState } from 'discord.js';
 import { config } from 'dotenv';
 import { exit } from 'process';
 import { MessageCounterHandler } from './bots/messagehandlers/messagecounter.handle';
@@ -12,11 +12,11 @@ config();
 
 const client = new Client({
     intents: [
-        Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS,
-        Intents.FLAGS.GUILD_MEMBERS,
-        Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_VOICE_STATES,
-        Intents.FLAGS.GUILDS,
+        IntentsBitField.Flags.GuildEmojisAndStickers,
+        IntentsBitField.Flags.GuildMembers,
+        IntentsBitField.Flags.GuildMessages,
+        IntentsBitField.Flags.GuildVoiceStates,
+        IntentsBitField.Flags.Guilds,
     ],
 });
 
