@@ -13,10 +13,12 @@ config();
 const client = new Client({
     intents: [
         IntentsBitField.Flags.GuildEmojisAndStickers,
+        IntentsBitField.Flags.GuildMessageReactions,
         IntentsBitField.Flags.GuildMembers,
         IntentsBitField.Flags.GuildMessages,
         IntentsBitField.Flags.GuildVoiceStates,
         IntentsBitField.Flags.Guilds,
+        IntentsBitField.Flags.MessageContent
     ],
 });
 
