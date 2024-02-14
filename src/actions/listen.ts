@@ -14,6 +14,7 @@ const modelsFiles = fs
     .readdirSync(modelsDir)
     .map((file) => path.resolve(modelsDir, file));
 
+console.log('*** Model files ***');
 console.log(modelsFiles);
 
 const handle = new Porcupine(
@@ -21,6 +22,13 @@ const handle = new Porcupine(
     modelsFiles,
     modelsFiles.map(() => 1)
 );
+
+console.log('*** Decoder settings ***');
+console.log({
+    frameSize: handle.frameLength,
+    channels: 1,
+    rate: handle.sampleRate,
+});
 
 export async function joinAndListen(
     voiceChannel: VoiceChannel,
@@ -52,7 +60,12 @@ export async function joinAndListen(
 
     let found = false;
     receiver.speaking.setMaxListeners(25).on('start', async (userId) => {
-        if (found) return;
+        if (
+            found ||
+            receiver.subscriptions.get(userId)?.readableEnded === false
+        ) {
+            return;
+        }
 
         const decoder = new prism.opus.Decoder({
             frameSize: handle.frameLength,
@@ -60,7 +73,15 @@ export async function joinAndListen(
             rate: handle.sampleRate,
         });
 
-        // creates a readable stream of opus packets from user voice
+        /** 1 frame is 512 samples, and 1 second is 16k samples
+         *  so 31.25 frames per second
+         */
+
+        /** Number of frames to consider at a time for Porcupine processing */
+        const frameBuffer = 15;
+        /** Number of frames to jump forward if no hotword found. Less than buffer */
+        const frameJump = 10;
+
         const sub = receiver
             .subscribe(userId, {
                 end: {
@@ -68,44 +89,45 @@ export async function joinAndListen(
                     duration: 500,
                 },
             })
-            .setMaxListeners(50)
             .on('error', console.error)
             .pipe(decoder);
 
-        let arr: any[] = [];
+        let buf: number[] = [];
         for await (const data of sub) {
             if (found) return;
-            arr.push(...bufferToInt16(data));
-            if (arr.length > handle.frameLength) {
-                const result = handle.process(
-                    new Int16Array(arr.slice(0, handle.frameLength))
-                );
-                if (result != -1) {
-                    found = true;
-                    connection.destroy();
-                    receiver.speaking.removeAllListeners();
-                    sub.destroy();
-                    clearTimeout(timeout);
-                    const user = await oceanCurse.client.users.fetch(userId);
-                    await oceanCurse.sendToDefaultTextChannel(
-                        `I heard ${user.displayName} say my name, deploying OceanCurse`
+            buf.push(...bufferToInt16(data));
+            const limit = handle.frameLength * frameBuffer;
+            if (buf.length > limit) {
+                for (let i = 0; i < limit; i += handle.frameLength) {
+                    const result = handle.process(
+                        new Int16Array(buf.slice(i, i + handle.frameLength))
                     );
-                    await playOceanMan(voiceChannel);
-                    return;
+                    if (result != -1) {
+                        found = true;
+                        connection.destroy();
+                        receiver.speaking.removeAllListeners();
+                        sub.destroy();
+                        clearTimeout(timeout);
+                        const user =
+                            await oceanCurse.client.users.fetch(userId);
+                        await oceanCurse.sendToDefaultTextChannel(
+                            `I heard ${user.displayName} say my name, deploying OceanCurse`
+                        );
+                        await playOceanMan(voiceChannel);
+                        return;
+                    }
                 }
 
-                arr = arr.slice(handle.frameLength);
+                buf = buf.slice(frameJump * handle.frameLength);
             }
         }
     });
 }
 
 function bufferToInt16(buffer: Buffer) {
-    const int16Array = [];
-
+    const result = Array(buffer.length / 2);
     for (let i = 0; i < buffer.length; i += 2) {
-        int16Array.push(buffer.readInt16LE(i));
+        result[i / 2] = buffer.readInt16LE(i);
     }
-
-    return int16Array;
+    return result;
 }
