@@ -64,7 +64,7 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
 
         async function replyAndDelete(
             reply: string,
-            timeout: number = 15 * 1000
+            timeout: number = 5 * 1000
         ) {
             const replyToDelete = await message.reply(reply);
             try {
@@ -86,7 +86,7 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
                 );
 
                 await replyAndDelete(
-                    `The curse is on ${cursedMember.displayName}. Self destruct in 15 seconds.`
+                    `The curse is on ${cursedMember.displayName}. Self destruct in 5 seconds.`
                 );
             } else {
                 oceanCurse.sendToDefaultTextChannel(
@@ -95,7 +95,7 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
             }
         } else if (message.author.id !== this.cursedMemberId) {
             await replyAndDelete(
-                "You can't curse someone, you aren't the one who is cursed! Self destruct in 15 seconds."
+                "You can't curse someone, you aren't the one who is cursed! Self destruct in 5 seconds."
             );
             oceanCurse.playOceanMan();
         } else {
@@ -121,7 +121,7 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
 
                     this.cursedMemberId = newCursedMember.user.id;
                     await replyAndDelete(
-                        `Cursing ${newCursedMember.displayName}. Self destruct in 15 seconds.`
+                        `Cursing ${newCursedMember.displayName}. Self destruct in 5 seconds.`
                     );
                 } catch (e) {
                     console.error(e);
@@ -131,7 +131,7 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
                 }
             } else {
                 await replyAndDelete(
-                    'You must join the voice channel to curse someone. Self destruct in 15 seconds.'
+                    'You must join the voice channel to curse someone. Self destruct in 5 seconds.'
                 );
             }
         }
