@@ -13,7 +13,7 @@ export enum StateVar {
 const persistentStateValidator = z.object({
     [StateVar.CursedMemberId]: z
         .string({ description: 'Cursed member ID' })
-        .length(18, 'Incorrect length for cursed member ID')
+        .min(18, 'Incorrect length for cursed member ID')
         .default(Daniel),
     [StateVar.MessageCount]: z
         .number({
