@@ -29,7 +29,6 @@ client.once('ready', async () => {
 function getRandomMan() {
     const items = [
         'https://www.youtube.com/watch?v=tkzY_VwNIek',
-        'https://www.youtube.com/watch?v=4RSUuu_FqHo',
         'https://www.youtube.com/watch?v=Aad3ufeWQDc',
         'https://www.youtube.com/watch?v=sX25DfAkmBo',
         'https://www.youtube.com/watch?v=WeRMPOufeSw',
