@@ -68,6 +68,7 @@ export async function joinAndListen(
                     duration: 500,
                 },
             })
+            .setMaxListeners(50)
             .on('error', console.error)
             .pipe(decoder);
 
