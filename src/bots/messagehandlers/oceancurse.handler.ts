@@ -5,7 +5,6 @@ import { MessageHandler } from '../messagehandler.base';
 import { OceanCurse } from '../oceancurse';
 import { VoiceStateHandler } from '../voicestatehandler';
 import { joinAndListen } from '../../actions/listen';
-import { Daniel } from '../../ids';
 
 export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
     constructor(
@@ -45,7 +44,7 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
         if (
             oldState.channelId !== oceanCurse.defaultVoiceChannelId &&
             channel?.id === oceanCurse.defaultVoiceChannelId &&
-            newState.member?.id === Daniel
+            newState.member?.id === this.cursedMemberId
         ) {
             const voiceChannel = await oceanCurse.getDefaultVoiceChannel();
             joinAndListen(voiceChannel, newState.member.id, oceanCurse);
