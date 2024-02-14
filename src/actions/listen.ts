@@ -17,19 +17,6 @@ const modelsFiles = fs
 console.log('*** Model files ***');
 console.log(modelsFiles);
 
-const handle = new Porcupine(
-    accessKey,
-    modelsFiles,
-    modelsFiles.map(() => 1)
-);
-
-console.log('*** Decoder settings ***');
-console.log({
-    frameSize: handle.frameLength,
-    channels: 1,
-    rate: handle.sampleRate,
-});
-
 export async function joinAndListen(
     voiceChannel: VoiceChannel,
     cursedMemberId: string,
@@ -67,6 +54,12 @@ export async function joinAndListen(
             return;
         }
 
+        const handle = new Porcupine(
+            accessKey,
+            modelsFiles,
+            modelsFiles.map(() => 1)
+        );
+
         const decoder = new prism.opus.Decoder({
             frameSize: handle.frameLength,
             channels: 1,
@@ -78,9 +71,9 @@ export async function joinAndListen(
          */
 
         /** Number of frames to consider at a time for Porcupine processing */
-        const frameBuffer = 15;
-        /** Number of frames to jump forward if no hotword found. Less than buffer */
-        const frameJump = 10;
+        const frameBuffer = 1;
+        /** Number of frames to jump forward if no hotword found. <= buffer */
+        const frameJump = 1;
 
         const sub = receiver
             .subscribe(userId, {
