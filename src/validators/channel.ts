@@ -1,4 +1,10 @@
-import { Channel, ChannelType, Client, TextChannel, VoiceChannel } from 'discord.js';
+import {
+    Channel,
+    ChannelType,
+    Client,
+    TextChannel,
+    VoiceChannel,
+} from 'discord.js';
 
 export type ChannelValidator<T extends Channel> = (
     channel: Channel

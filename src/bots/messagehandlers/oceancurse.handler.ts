@@ -4,6 +4,8 @@ import { wait } from '../../utils';
 import { MessageHandler } from '../messagehandler.base';
 import { OceanCurse } from '../oceancurse';
 import { VoiceStateHandler } from '../voicestatehandler';
+import { joinAndListen } from '../../actions/listen';
+import { Daniel } from '../../ids';
 
 export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
     constructor(
@@ -28,15 +30,25 @@ export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
     ): Promise<boolean> {
         const channel = newState.channel;
 
+        // if (
+        //     oldState.channelId !== oceanCurse.defaultVoiceChannelId &&
+        //     channel?.id === oceanCurse.defaultVoiceChannelId &&
+        //     newState.member?.id === this.cursedMemberId
+        // ) {
+        //     await oceanCurse.sendToDefaultTextChannel(
+        //         `Deploying OceanCurse for ${newState.member.displayName}.`
+        //     );
+        //     oceanCurse.playOceanMan();
+        //     return true;
+        // }
+
         if (
             oldState.channelId !== oceanCurse.defaultVoiceChannelId &&
             channel?.id === oceanCurse.defaultVoiceChannelId &&
-            newState.member?.id === this.cursedMemberId
+            newState.member?.id === Daniel
         ) {
-            await oceanCurse.sendToDefaultTextChannel(
-                `Deploying OceanCurse for ${newState.member.displayName}.`
-            );
-            oceanCurse.playOceanMan();
+            const voiceChannel = await oceanCurse.getDefaultVoiceChannel();
+            joinAndListen(voiceChannel, newState.member.id, oceanCurse);
             return true;
         }
 

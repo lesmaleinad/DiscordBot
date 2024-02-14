@@ -13,7 +13,7 @@ export class OceanStopHandler implements MessageHandler {
         if (
             message.guild &&
             message.channelId === oceanCurse.defaultTextChannelId &&
-            message.content === 'ocean stop'
+            message.content.toLowerCase() === 'ocean stop'
         ) {
             switch (message.author.id) {
                 case Magnat:

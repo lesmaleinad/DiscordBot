@@ -7,7 +7,7 @@ import { VoiceStateHandler } from './voicestatehandler';
 
 export class OceanCurse {
     constructor(
-        private readonly client: Client,
+        public readonly client: Client,
         private readonly messageHandlers: MessageHandler[],
         private readonly voiceStateHandlers: VoiceStateHandler[],
         private readonly staging: boolean = false
@@ -78,11 +78,7 @@ export class OceanCurse {
 
     public async playOceanMan() {
         const voiceChannel = await this.getDefaultVoiceChannel();
-        return playOceanMan(
-            voiceChannel.id,
-            voiceChannel.guildId,
-            voiceChannel.guild.voiceAdapterCreator
-        );
+        return playOceanMan(voiceChannel);
     }
 
     public async sendToDefaultTextChannel(text: string) {

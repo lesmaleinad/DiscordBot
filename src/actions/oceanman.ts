@@ -4,7 +4,7 @@ import {
     createAudioResource,
     AudioPlayerStatus,
 } from '@discordjs/voice';
-import { Client, InternalDiscordGatewayAdapterCreator } from 'discord.js';
+import { Client, VoiceChannel } from 'discord.js';
 import ytdl from 'ytdl-core';
 import { fetchChannel, channelIsTextChannel } from '../validators/channel';
 import { getRandomMan } from '../videos/getrandomman';
@@ -18,16 +18,12 @@ export async function sendMessageToTextChannel(
     return channel.send(message);
 }
 
-export function playOceanMan(
-    channelId: string,
-    guildId: string,
-    adapter: InternalDiscordGatewayAdapterCreator
-) {
+export function playOceanMan(voiceChannel: VoiceChannel) {
     return new Promise<void>((resolve) => {
         const connection = joinVoiceChannel({
-            channelId: channelId,
-            guildId: guildId,
-            adapterCreator: adapter,
+            channelId: voiceChannel.id,
+            guildId: voiceChannel.guildId,
+            adapterCreator: voiceChannel.guild.voiceAdapterCreator,
             selfDeaf: false,
         });
         const timeout = setTimeout(
@@ -46,9 +42,6 @@ export function playOceanMan(
 
         try {
             const player = createAudioPlayer();
-            player.on('error', (e) => {
-                console.error(e);
-            });
             connection.subscribe(player);
 
             const link = getRandomMan();
@@ -68,6 +61,14 @@ export function playOceanMan(
                 } finally {
                     resolve();
                 }
+            });
+
+            player.on('error', (e) => {
+                console.error('LINK: ' + link);
+                console.error(e);
+                clearTimeout(timeout);
+                connection.destroy();
+                resolve();
             });
         } catch (e) {
             console.error(e);

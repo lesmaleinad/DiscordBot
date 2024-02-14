@@ -18,7 +18,7 @@ const client = new Client({
         IntentsBitField.Flags.GuildMessages,
         IntentsBitField.Flags.GuildVoiceStates,
         IntentsBitField.Flags.Guilds,
-        IntentsBitField.Flags.MessageContent
+        IntentsBitField.Flags.MessageContent,
     ],
 });
 
