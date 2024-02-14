@@ -71,9 +71,9 @@ export async function joinAndListen(
          */
 
         /** Number of frames to consider at a time for Porcupine processing */
-        const frameBuffer = 1;
+        const frameBuffer = 5;
         /** Number of frames to jump forward if no hotword found. <= buffer */
-        const frameJump = 1;
+        const frameJump = 5;
 
         const sub = receiver
             .subscribe(userId, {
@@ -97,6 +97,9 @@ export async function joinAndListen(
                     );
                     if (result != -1) {
                         found = true;
+                        const word = modelsFiles[result]!.match(
+                            /models\\(.*)_en_windows/
+                        )?.[1]?.replace('-', ' ');
                         connection.destroy();
                         receiver.speaking.removeAllListeners();
                         sub.destroy();
@@ -104,7 +107,9 @@ export async function joinAndListen(
                         const user =
                             await oceanCurse.client.users.fetch(userId);
                         await oceanCurse.sendToDefaultTextChannel(
-                            `I heard ${user.displayName} say my name, deploying OceanCurse`
+                            `I heard ${user.displayName} say ${
+                                word ? `"${word}"` : 'my name'
+                            }, deploying OceanCurse`
                         );
                         await playOceanMan(voiceChannel);
                         return;
