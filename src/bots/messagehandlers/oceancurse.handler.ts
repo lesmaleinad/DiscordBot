@@ -7,19 +7,12 @@ import { VoiceStateHandler } from '../voicestatehandler';
 import { joinAndListen } from '../../actions/listen';
 
 export class OceanCurseHandler implements MessageHandler, VoiceStateHandler {
-    constructor(
-        private _cursedMemberId: string = State.getState(
-            StateVar.CursedMemberId
-        )
-    ) {}
-
     private set cursedMemberId(value: string) {
         State.updateState({ [StateVar.CursedMemberId]: value });
-        this._cursedMemberId = value;
     }
 
     private get cursedMemberId() {
-        return this._cursedMemberId;
+        return State.getState(StateVar.CursedMemberId);
     }
 
     public async handleVoiceChange(

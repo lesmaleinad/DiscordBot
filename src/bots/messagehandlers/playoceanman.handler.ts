@@ -1,8 +1,11 @@
 import { Message } from 'discord.js';
 import { MessageHandler } from '../messagehandler.base';
 import { OceanCurse } from '../oceancurse';
+import { ThankYouReplyHandler } from './thankyoureply.handler';
 
 export class PlayOceanManHandler implements MessageHandler {
+    constructor(private readonly thankYouHandler: ThankYouReplyHandler) {}
+
     public async handle(
         message: Message,
         oceanCurse: OceanCurse
@@ -16,6 +19,7 @@ export class PlayOceanManHandler implements MessageHandler {
         ) {
             await oceanCurse.sendToDefaultTextChannel('Deploying Ocean Man...');
             oceanCurse.playOceanMan();
+            this.thankYouHandler.expectThanks(message.author, oceanCurse);
 
             return true;
         }
