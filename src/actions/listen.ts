@@ -17,6 +17,12 @@ const modelsFiles = fs
 console.log('*** Model files ***');
 console.log(modelsFiles);
 
+const handle = new Porcupine(
+    accessKey,
+    modelsFiles,
+    modelsFiles.map(() => 1)
+);
+
 export async function joinAndListen(
     voiceChannel: VoiceChannel,
     cursedMemberId: string,
@@ -46,6 +52,7 @@ export async function joinAndListen(
     const { receiver } = connection;
 
     let found = false;
+    const userToBuffer = new Map<string, any[]>();
     receiver.speaking.setMaxListeners(25).on('start', async (userId) => {
         if (
             found ||
@@ -54,14 +61,8 @@ export async function joinAndListen(
             return;
         }
 
-        const handle = new Porcupine(
-            accessKey,
-            modelsFiles,
-            modelsFiles.map(() => 1)
-        );
-
         const decoder = new prism.opus.Decoder({
-            frameSize: handle.frameLength,
+            frameSize: 512,
             channels: 1,
             rate: handle.sampleRate,
         });
@@ -71,52 +72,71 @@ export async function joinAndListen(
          */
 
         /** Number of frames to consider at a time for Porcupine processing */
-        const frameBuffer = 5;
+        const frameBuffer = 30;
         /** Number of frames to jump forward if no hotword found. <= buffer */
-        const frameJump = 5;
+        const frameJump = 30;
 
         const sub = receiver
             .subscribe(userId, {
                 end: {
                     behavior: EndBehaviorType.AfterSilence,
-                    duration: 500,
+                    duration: 1000,
                 },
             })
             .on('error', console.error)
             .pipe(decoder);
 
-        let buf: number[] = [];
-        for await (const data of sub) {
-            if (found) return;
-            buf.push(...bufferToInt16(data));
-            const limit = handle.frameLength * frameBuffer;
-            if (buf.length > limit) {
-                for (let i = 0; i < limit; i += handle.frameLength) {
-                    const result = handle.process(
-                        new Int16Array(buf.slice(i, i + handle.frameLength))
+        async function processFrames(buffer: any[]) {
+            for (
+                let i = handle.frameLength;
+                i < buffer.length;
+                i += handle.frameLength
+            ) {
+                const result = handle.process(
+                    new Int16Array(buffer.slice(i - handle.frameLength, i))
+                );
+                if (result != -1) {
+                    found = true;
+                    const word = modelsFiles[result]!.match(
+                        /models\\(.*)_en_windows/
+                    )?.[1]?.replace('-', ' ');
+                    connection.destroy();
+                    receiver.speaking.removeAllListeners();
+                    sub.destroy();
+                    clearTimeout(timeout);
+                    const user = await oceanCurse.client.users.fetch(userId);
+                    await oceanCurse.sendToDefaultTextChannel(
+                        `I heard ${user.displayName} say ${
+                            word ? `"${word}"` : 'my name'
+                        }, deploying OceanCurse`
                     );
-                    if (result != -1) {
-                        found = true;
-                        const word = modelsFiles[result]!.match(
-                            /models\\(.*)_en_windows/
-                        )?.[1]?.replace('-', ' ');
-                        connection.destroy();
-                        receiver.speaking.removeAllListeners();
-                        sub.destroy();
-                        clearTimeout(timeout);
-                        const user =
-                            await oceanCurse.client.users.fetch(userId);
-                        await oceanCurse.sendToDefaultTextChannel(
-                            `I heard ${user.displayName} say ${
-                                word ? `"${word}"` : 'my name'
-                            }, deploying OceanCurse`
-                        );
-                        await playOceanMan(voiceChannel);
-                        return;
-                    }
+                    await playOceanMan(voiceChannel);
+                    return;
                 }
+            }
+        }
 
-                buf = buf.slice(frameJump * handle.frameLength);
+        sub.on('close', async () => {
+            await processFrames(userToBuffer.get(userId) ?? []);
+            userToBuffer.set(userId, []);
+        });
+
+        for await (const data of decoder) {
+            if (found) return;
+
+            const buffer = userToBuffer.get(userId) ?? [];
+            buffer.push(...bufferToInt16(data));
+            const limit = handle.frameLength * frameBuffer;
+
+            if (buffer.length > limit) {
+                await processFrames(buffer.slice(0, limit));
+
+                userToBuffer.set(
+                    userId,
+                    buffer.slice(frameJump * handle.frameLength)
+                );
+            } else {
+                userToBuffer.set(userId, buffer);
             }
         }
     });
