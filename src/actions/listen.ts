@@ -100,7 +100,12 @@ export async function joinAndListen(
                     const word = modelsFiles[result]!.match(
                         /models\\(.*)_en_windows/
                     )?.[1]?.replace('-', ' ');
-                    connection.destroy();
+                    try {
+                        connection.destroy();
+                    } catch (e) {
+                        console.error(e);
+                    }
+
                     receiver.speaking.removeAllListeners();
                     sub.destroy();
                     clearTimeout(timeout);
