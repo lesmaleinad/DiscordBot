@@ -1,3 +1,7 @@
 node_modules
 *.env
 *.ppn
+dist
+data
+models/sherpa-onnx-*
+.deploy/

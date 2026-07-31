@@ -1,7 +1,7 @@
-import { getVoiceConnection } from '@discordjs/voice';
-import { Message } from 'discord.js';
+import { ChannelType, Message } from 'discord.js';
 import { FlyGuy, Magnat } from '../../ids';
 import { wait } from '../../utils';
+import { log } from '../../diagnostics';
 import { MessageHandler } from '../messagehandler.base';
 import { OceanCurse } from '../oceancurse';
 
@@ -17,25 +17,33 @@ export class OceanStopHandler implements MessageHandler {
         ) {
             switch (message.author.id) {
                 case Magnat:
-                    const voiceConnection = getVoiceConnection(
-                        oceanCurse.defaultGuildId
-                    );
-
-                    if (voiceConnection) {
-                        voiceConnection.destroy();
-                        message.channel.send(':ok_hand:');
+                    if (oceanCurse.stopActivePlayback(message.author.id)) {
+                        await oceanCurse.sendToDefaultTextChannel(':ok_hand:');
                     }
                     break;
                 case FlyGuy:
+                    log.info('listener.stop_rejected', {
+                        requestedBy: message.author.id,
+                        response: 'retaliation',
+                    });
                     await message.reply('no');
                     await wait(10 * 1000);
                     await oceanCurse.sendToDefaultTextChannel(
                         'In fact, just because you asked'
                     );
-                    oceanCurse.playOceanMan();
+                    await oceanCurse.playOceanMan(
+                        message.member?.voice.channel?.type ===
+                            ChannelType.GuildVoice
+                            ? message.member.voice.channel
+                            : undefined
+                    );
                     break;
                 default:
-                    message.reply('no');
+                    log.info('listener.stop_rejected', {
+                        requestedBy: message.author.id,
+                        response: 'denied',
+                    });
+                    await message.reply('no');
             }
             return true;
         }

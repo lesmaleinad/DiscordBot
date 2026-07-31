@@ -2,30 +2,32 @@
     "name": "oceancurse",
     "version": "1.0.0",
     "description": "Curse of the OceanMan",
-    "main": "index.js",
+    "main": "dist/index.js",
     "scripts": {
-        "start": "ts-node ./src/index",
+        "build": "tsc",
+        "start": "node ./dist/index.js",
+        "dev": "ts-node ./src/index",
+        "typecheck": "tsc --noEmit",
         "format": "prettier -w .",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@discordjs/rest": "^2.0.0",
-        "@discordjs/voice": "^0.16.0",
-        "@picovoice/porcupine-node": "^3.0.2",
-        "discord.js": "^14.12.1",
-        "dotenv": "^16.3.1",
+        "@discordjs/rest": "^2.6.3",
+        "@discordjs/voice": "^0.19.2",
+        "discord.js": "^14.27.0",
+        "dotenv": "^17.4.2",
         "libsodium-wrappers": "^0.7.11",
         "opusscript": "^0.0.8",
         "prism-media": "^1.3.5",
+        "sherpa-onnx-node": "^1.13.4",
         "ts-node": "^10.9.2",
         "typescript": "^5.1.6",
-        "ytdl-core": "^4.11.5",
         "zod": "^3.22.1"
     },
     "devDependencies": {
-        "@types/node": "^20.5.0",
+        "@types/node": "^26.1.1",
         "discord-api-types": "^0.37.53",
         "prettier": "^3.0.2"
     }

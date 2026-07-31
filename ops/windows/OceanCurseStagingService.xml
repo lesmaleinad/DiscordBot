@@ -1,0 +1,29 @@
+<service>
+  <id>OceanCurseStaging</id>
+  <name>Ocean Curse Staging</name>
+  <description>Ocean Curse Discord bot staging instance</description>
+
+  <executable>C:\ProgramData\OceanCurse\runtime\node-v22.14.0-win-x64\node.exe</executable>
+  <arguments>--env-file=C:\ProgramData\OceanCurse\secrets\oceancurse.staging.env dist\index.js --staging</arguments>
+  <workingdirectory>C:\ProgramData\OceanCurse\app</workingdirectory>
+
+  <env name="HEALTH_FILE" value="C:\ProgramData\OceanCurse\state\staging-ready" />
+  <env name="YT_DLP_PATH" value="C:\ProgramData\OceanCurse\bin\yt-dlp.exe" />
+  <env name="CURSE_TTL_MINUTES" value="10" />
+
+  <startmode>Manual</startmode>
+  <serviceaccount>
+    <domain>NT AUTHORITY</domain>
+    <user>NetworkService</user>
+  </serviceaccount>
+
+  <onfailure action="restart" delay="10 sec" />
+  <resetfailure>1 hour</resetfailure>
+  <stoptimeout>15 sec</stoptimeout>
+
+  <logpath>C:\ProgramData\OceanCurse\logs</logpath>
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>3</keepFiles>
+  </log>
+</service>

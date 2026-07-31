@@ -1,33 +1,26 @@
 import { EndBehaviorType, joinVoiceChannel } from '@discordjs/voice';
 import { VoiceChannel } from 'discord.js';
-import { wait } from '../utils';
 import prism from 'prism-media';
-import fs from 'fs';
-import path from 'path';
-import { Porcupine } from '@picovoice/porcupine-node';
-import { playOceanMan } from './oceanman';
+import { wait } from '../utils';
 import { OceanCurse } from '../bots/oceancurse';
+import { errorFields, log } from '../diagnostics';
+import { OceanManKeywordSpotter } from './keywordspotter';
 
-const accessKey = process.env['PICOVOICE_ACCESS_KEY']!!;
-const modelsDir = path.resolve(process.cwd(), 'models');
-const modelsFiles = fs
-    .readdirSync(modelsDir)
-    .map((file) => path.resolve(modelsDir, file));
+const keywordSpotter = new OceanManKeywordSpotter();
 
-console.log('*** Model files ***');
-console.log(modelsFiles);
+export type StopListener = (reason: string) => void;
 
-const handle = new Porcupine(
-    accessKey,
-    modelsFiles,
-    modelsFiles.map(() => 1)
-);
-
-export async function joinAndListen(
+export function joinAndListen(
     voiceChannel: VoiceChannel,
     cursedMemberId: string,
     oceanCurse: OceanCurse
-) {
+): StopListener {
+    const startedAt = Date.now();
+    log.info('listener.started', {
+        guildId: voiceChannel.guildId,
+        channelId: voiceChannel.id,
+        cursedMemberId,
+    });
     const connection = joinVoiceChannel({
         channelId: voiceChannel.id,
         guildId: voiceChannel.guildId,
@@ -35,25 +28,67 @@ export async function joinAndListen(
         selfDeaf: false,
     });
 
+    let found = false;
+    let stopped = false;
+    const stopListener = (reason: string) => {
+        if (stopped) return;
+        stopped = true;
+        clearTimeout(timeout);
+        receiver.speaking.removeAllListeners();
+        try {
+            connection.destroy();
+        } catch (error) {
+            log.warn('listener.disconnect_failed', {
+                reason,
+                ...errorFields(error),
+            });
+        }
+        log.info('listener.stopped', {
+            reason,
+            channelId: voiceChannel.id,
+            cursedMemberId,
+            durationMs: Date.now() - startedAt,
+        });
+    };
+
     const timeout = setTimeout(
         async () => {
             while (voiceChannel.members.has(cursedMemberId)) {
                 await wait(10 * 1000);
             }
-
-            try {
-                connection.destroy();
-            } catch (e) {
-                console.error(e);
-            }
+            stopListener('cursed_member_left');
         },
-        5 * 60 * 1000 // 5 minutes
+        5 * 60 * 1000
     );
-    const { receiver } = connection;
 
-    let found = false;
-    const userToBuffer = new Map<string, any[]>();
-    receiver.speaking.setMaxListeners(25).on('start', async (userId) => {
+    const { receiver } = connection;
+    connection.on('error', (error) => {
+        log.error('listener.connection_error', {
+            channelId: voiceChannel.id,
+            ...errorFields(error),
+        });
+    });
+
+    const deployCurse = async (userId: string, keyword: string) => {
+        if (found) return;
+        found = true;
+        clearTimeout(timeout);
+        log.info('keyword.detected', {
+            userId,
+            keyword,
+            channelId: voiceChannel.id,
+        });
+        stopListener('keyword_detected');
+
+        const user = await oceanCurse.client.users.fetch(userId);
+        const phrase = keyword.replaceAll('_', ' ').toLowerCase();
+        await oceanCurse.sendToDefaultTextChannel(
+            `I heard ${user.displayName} say "${phrase}", deploying OceanCurse`
+        );
+        await oceanCurse.playOceanMan(voiceChannel);
+    };
+
+    const listenToSpeaker = async (userId: string) => {
         if (
             found ||
             receiver.subscriptions.get(userId)?.readableEnded === false
@@ -61,96 +96,59 @@ export async function joinAndListen(
             return;
         }
 
+        const stream = keywordSpotter.createStream();
         const decoder = new prism.opus.Decoder({
-            frameSize: 512,
+            frameSize: 320,
             channels: 1,
-            rate: handle.sampleRate,
+            rate: 16_000,
+        });
+        const subscription = receiver.subscribe(userId, {
+            end: {
+                behavior: EndBehaviorType.AfterSilence,
+                duration: 1000,
+            },
         });
 
-        /** 1 frame is 512 samples, and 1 second is 16k samples
-         *  so 31.25 frames per second
-         */
+        subscription.on('error', (error) => {
+            log.warn('listener.subscription_error', {
+                userId,
+                ...errorFields(error),
+            });
+        });
+        decoder.on('error', (error) => {
+            log.warn('listener.decoder_error', {
+                userId,
+                ...errorFields(error),
+            });
+        });
+        subscription.pipe(decoder);
 
-        /** Number of frames to consider at a time for Porcupine processing */
-        const frameBuffer = 30;
-        /** Number of frames to jump forward if no hotword found. <= buffer */
-        const frameJump = 30;
-
-        const sub = receiver
-            .subscribe(userId, {
-                end: {
-                    behavior: EndBehaviorType.AfterSilence,
-                    duration: 1000,
-                },
-            })
-            .on('error', console.error)
-            .pipe(decoder);
-
-        async function processFrames(buffer: any[]) {
-            for (
-                let i = handle.frameLength;
-                i < buffer.length;
-                i += handle.frameLength
-            ) {
-                const result = handle.process(
-                    new Int16Array(buffer.slice(i - handle.frameLength, i))
-                );
-                if (result != -1) {
-                    found = true;
-                    const word = modelsFiles[result]!.match(
-                        /models\\(.*)_en_windows/
-                    )?.[1]?.replace('-', ' ');
-                    try {
-                        connection.destroy();
-                    } catch (e) {
-                        console.error(e);
-                    }
-
-                    receiver.speaking.removeAllListeners();
-                    sub.destroy();
-                    clearTimeout(timeout);
-                    const user = await oceanCurse.client.users.fetch(userId);
-                    await oceanCurse.sendToDefaultTextChannel(
-                        `I heard ${user.displayName} say ${
-                            word ? `"${word}"` : 'my name'
-                        }, deploying OceanCurse`
-                    );
-                    await playOceanMan(voiceChannel);
+        try {
+            for await (const data of decoder as unknown as AsyncIterable<Buffer>) {
+                if (found) return;
+                const keyword = keywordSpotter.acceptPcm(stream, data);
+                if (keyword) {
+                    subscription.destroy();
+                    await deployCurse(userId, keyword);
                     return;
                 }
             }
-        }
 
-        sub.on('close', async () => {
-            await processFrames(userToBuffer.get(userId) ?? []);
-            userToBuffer.set(userId, []);
-        });
-
-        for await (const data of decoder) {
-            if (found) return;
-
-            const buffer = userToBuffer.get(userId) ?? [];
-            buffer.push(...bufferToInt16(data));
-            const limit = handle.frameLength * frameBuffer;
-
-            if (buffer.length > limit) {
-                await processFrames(buffer.slice(0, limit));
-
-                userToBuffer.set(
-                    userId,
-                    buffer.slice(frameJump * handle.frameLength)
-                );
-            } else {
-                userToBuffer.set(userId, buffer);
+            if (!found) {
+                const keyword = keywordSpotter.finish(stream);
+                if (keyword) await deployCurse(userId, keyword);
             }
+        } catch (error) {
+            log.error('listener.stream_error', {
+                userId,
+                ...errorFields(error),
+            });
         }
-    });
-}
+    };
 
-function bufferToInt16(buffer: Buffer) {
-    const result = Array(buffer.length / 2);
-    for (let i = 0; i < buffer.length; i += 2) {
-        result[i / 2] = buffer.readInt16LE(i);
-    }
-    return result;
+    receiver.speaking.setMaxListeners(25).on('start', async (userId) => {
+        await listenToSpeaker(userId);
+    });
+
+    return stopListener;
 }
