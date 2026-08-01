@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1
 
-ARG NODE_VERSION=22.14.0
+ARG NODE_IMAGE=node:22.14.0-bookworm-slim@sha256:1c18d9ab3af4585870b92e4dbc5cac5a0dc77dd13df1a5905cea89fc720eb05b
 
-FROM node:${NODE_VERSION}-bookworm-slim AS build
+FROM ${NODE_IMAGE} AS build
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ COPY config ./config
 RUN npm run build \
     && npm prune --omit=dev
 
-FROM node:${NODE_VERSION}-bookworm-slim AS yt-dlp
+FROM ${NODE_IMAGE} AS yt-dlp
 
 ARG YT_DLP_VERSION=2026.06.09
 ARG YT_DLP_SHA256=e5d57466682cfa9d61e9cf7c8a4f09b00f4a62af37d3bbdc4bcffdf63615feac
@@ -28,7 +28,7 @@ RUN apt-get update \
     && echo "${YT_DLP_SHA256}  /usr/local/bin/yt-dlp" | sha256sum --check --strict \
     && chmod 0755 /usr/local/bin/yt-dlp
 
-FROM node:${NODE_VERSION}-bookworm-slim AS runtime
+FROM ${NODE_IMAGE} AS runtime
 
 ARG VCS_REF=unknown
 
