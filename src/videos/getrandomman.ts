@@ -9,12 +9,10 @@ export const oceanManVideos = [
     'https://youtu.be/DU8Gq3-tccI',
     'https://youtu.be/NQLHwyY9S7w',
     'https://youtu.be/k2ECO76kI44',
-    'https://youtu.be/RI5Z1Lo_oIk',
     'https://youtu.be/YCDLkW8uwz4',
     'https://youtu.be/W5jQm9esneU',
     'https://youtu.be/X0N9fQtzSHw',
     'https://youtu.be/BfSvnzWAm6Q',
-    'https://youtu.be/CVi39Rl3GLI',
     'https://youtu.be/QFwq3CI1Jw0',
     'https://www.youtube.com/watch?v=8Oob96u2cOg',
     'https://www.youtube.com/watch?v=91nTBwkqG2k',
@@ -26,6 +24,13 @@ export const oceanManVideos = [
     'https://www.youtube.com/watch?v=vEyNlGXuqiw',
     'https://www.youtube.com/watch?v=BEc5hVMGcHw',
     'https://www.youtube.com/watch?v=ya-733fydeI',
+    'https://youtu.be/6CE0mfAJn1E',
+    'https://youtu.be/GtlpjfNn6VM',
+    'https://youtu.be/38nZgYurFpw',
+    'https://youtu.be/c7NQiQRYgLs',
+    'https://youtu.be/jBamD9KG4Ug',
+    'https://youtu.be/n8iZl6qIuZw',
+    'https://youtu.be/15pnC9gmiIQ',
 ] as const;
 
 export function getRandomMan(): string {
