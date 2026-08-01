@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { z } from 'zod';
 import { Daniel } from '../ids';
-import { optionalEnvironment } from '../environment';
+import { booleanEnvironment, optionalEnvironment } from '../environment';
 import { errorFields, log } from '../diagnostics';
 
 export enum StateVar {
@@ -39,9 +39,10 @@ const persistentStateValidator = z.object({
 export type PersistentState = z.infer<typeof persistentStateValidator>;
 
 class PersistedState {
-    private readonly path = process.argv.includes('--staging')
-        ? undefined
-        : optionalEnvironment('STATE_PATH');
+    private readonly path =
+        process.argv.includes('--staging') || booleanEnvironment('STAGING')
+            ? undefined
+            : optionalEnvironment('STATE_PATH');
 
     private readState(): PersistentState {
         try {

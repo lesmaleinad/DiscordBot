@@ -1,0 +1,12 @@
+.git
+.gitignore
+.deploy
+*.env
+*.ppn
+data
+dist
+models
+node_modules
+npm-debug.log*
+ops/windows
+
