@@ -28,6 +28,23 @@ RUN apt-get update \
     && echo "${YT_DLP_SHA256}  /usr/local/bin/yt-dlp" | sha256sum --check --strict \
     && chmod 0755 /usr/local/bin/yt-dlp
 
+FROM ${NODE_IMAGE} AS sherpa-model
+
+ARG SHERPA_MODEL_NAME=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20
+ARG SHERPA_MODEL_URL=https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20.tar.bz2
+ARG SHERPA_MODEL_SHA256=68447f4fbc67e70eee3a93961f36e81e98f47aef73ce7e7ca00885c6cd3616a6
+
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends ca-certificates curl bzip2 \
+    && curl --fail --location --silent --show-error \
+        "${SHERPA_MODEL_URL}" \
+        --output /tmp/sherpa-model.tar.bz2 \
+    && echo "${SHERPA_MODEL_SHA256}  /tmp/sherpa-model.tar.bz2" | sha256sum --check --strict \
+    && mkdir -p /models \
+    && tar --extract --bzip2 --file /tmp/sherpa-model.tar.bz2 --directory /models \
+    && test -f "/models/${SHERPA_MODEL_NAME}/tokens.txt" \
+    && rm -rf /var/lib/apt/lists/* /tmp/sherpa-model.tar.bz2
+
 FROM ${NODE_IMAGE} AS runtime
 
 ARG VCS_REF=unknown
@@ -47,7 +64,7 @@ ENV NODE_ENV=production \
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends ca-certificates libgomp1 python3 \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /app/models /var/lib/oceancurse \
+    && mkdir -p /app /var/lib/oceancurse \
     && chown -R node:node /app /var/lib/oceancurse
 
 WORKDIR /app
@@ -57,6 +74,7 @@ COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --chown=node:node config ./config
 COPY --chown=node:node scripts/docker-healthcheck.js ./scripts/docker-healthcheck.js
 COPY --from=yt-dlp /usr/local/bin/yt-dlp /usr/local/bin/yt-dlp
+COPY --from=sherpa-model --chown=node:node /models ./models
 
 USER node
 
