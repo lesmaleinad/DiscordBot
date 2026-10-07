@@ -1,38 +1,48 @@
 # Ocean Curse container image
 
-The Dockerfile builds the single Linux/amd64 application image used by both
-staging and production. Deployment-specific Compose files, paths, secrets,
-state, and Ansible automation belong to the `homelab-severus` repository.
+The Dockerfile builds the Linux/amd64 image used by staging and production.
+It embeds the pinned Sherpa speech model. Credentials, state and songs live
+outside the image. Deployment configuration belongs to `homelab-severus`.
 
-The image intentionally excludes credentials, runtime state, diagnostic logs,
-and the Sherpa model. It runs as the unprivileged `node` user with a read-only
-root filesystem when deployed by the homelab Compose project. Application
-events go to stdout/stderr, and Docker health is derived from the heartbeat
-written only while the Discord client is ready.
+## Local songs
 
-Build from the repository root:
+Install `yt-dlp` separately on the machine used to prepare songs. From this
+repository run:
 
-```bash
-version="$(git rev-parse --short=12 HEAD)"
-docker build \
-  --platform linux/amd64 \
-  --build-arg "VCS_REF=$version" \
-  --tag "oceancurse:$version" \
-  .
+```powershell
+npm run download-songs
+npm run download-songs -- C:\OceanCurse\songs
 ```
 
-The runtime expects:
+The script contains the original 32 YouTube URLs and downloads Opus audio in
+WebM containers. `YT_DLP_PATH` selects the downloader executable; `SONG_DIR`
+sets the default output directory (otherwise `./songs`). An explicit command
+argument overrides that directory. Reruns skip completed, nonempty files and
+continue after individual failures, exiting nonzero if any song fails.
+YouTube errors occur during preparation rather than during voice playback.
 
-- `DISCORD_TOKEN_FILE` to name a mounted file containing only the Discord
-  token.
-- `SHERPA_MODEL_DIR` to identify the mounted Sherpa model directory.
-- `STATE_PATH` to identify the writable production state file. Staging mode
-  intentionally does not persist curse state.
-- `HEALTH_FILE` to identify the writable heartbeat path inspected by the image
-  health check.
+The bot selects a random nonempty `.webm`, `.ogg`, or `.opus` file from
+`SONG_DIR` (otherwise `./songs`). These files must contain Opus audio;
+MP3/AAC files are not supported. Temporary `.part` files are ignored. An empty
+or missing directory fails before joining voice. There is no online fallback.
+Downloaded audio is excluded from Git and Docker build contexts.
 
-The Python zipapp release of `yt-dlp` 2026.06.09 is downloaded and SHA-256
-verified during the build. It uses the image's Python runtime instead
-of extracting a bundled interpreter into the constrained `/tmp` tmpfs on every
-playback. The version and checksum are explicit Docker build arguments so an
-update is a reviewable image change.
+For Docker, copy the prepared files onto the host and mount their directory
+read-only at `/songs`. Files and directories must be readable by UID 1000.
+Staging and production can share this directory. The downloader is not part
+of the bot image and is never run by the bot.
+
+## Build and runtime
+
+```bash
+docker build --platform linux/amd64 --tag oceancurse:local .
+```
+
+Runtime configuration:
+
+- `DISCORD_TOKEN_FILE`: mounted Discord token file.
+- `SHERPA_MODEL_DIR`: embedded model directory, set by the image.
+- `SONG_DIR`: read-only song directory, `/songs` in the image.
+- `STATE_PATH`: writable curse state file.
+- `HEALTH_FILE`: writable Discord readiness heartbeat. This checks connection
+  readiness; it does not verify the song library or audio playback.

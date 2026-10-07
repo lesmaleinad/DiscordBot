@@ -9,7 +9,8 @@
         "dev": "ts-node ./src/index",
         "typecheck": "tsc --noEmit",
         "format": "prettier -w .",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "npm run build && node --test scripts/test-songs.js",
+        "download-songs": "node scripts/download-songs.js"
     },
     "author": "",
     "license": "ISC",

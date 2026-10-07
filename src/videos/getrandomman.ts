@@ -1,38 +1,33 @@
-export const oceanManVideos = [
-    'https://www.youtube.com/watch?v=tkzY_VwNIek',
-    'https://www.youtube.com/watch?v=Aad3ufeWQDc',
-    'https://www.youtube.com/watch?v=sX25DfAkmBo',
-    'https://youtu.be/bC_k4ClAEqc',
-    'https://youtu.be/ZjZFn4ZKIzY',
-    'https://youtu.be/xfm8xjyBbeg',
-    'https://youtu.be/qLTNjWdzqGo',
-    'https://youtu.be/DU8Gq3-tccI',
-    'https://youtu.be/NQLHwyY9S7w',
-    'https://youtu.be/k2ECO76kI44',
-    'https://youtu.be/YCDLkW8uwz4',
-    'https://youtu.be/W5jQm9esneU',
-    'https://youtu.be/X0N9fQtzSHw',
-    'https://youtu.be/BfSvnzWAm6Q',
-    'https://youtu.be/QFwq3CI1Jw0',
-    'https://www.youtube.com/watch?v=8Oob96u2cOg',
-    'https://www.youtube.com/watch?v=91nTBwkqG2k',
-    'https://www.youtube.com/watch?v=A7LlJzEeI14',
-    'https://www.youtube.com/watch?v=-W6abbyFQe0',
-    'https://www.youtube.com/watch?v=49F1QWAl_u0',
-    'https://www.youtube.com/watch?v=Mbu2KRC0wxg',
-    'https://www.youtube.com/watch?v=I3lVZVWCdOo',
-    'https://www.youtube.com/watch?v=vEyNlGXuqiw',
-    'https://www.youtube.com/watch?v=BEc5hVMGcHw',
-    'https://www.youtube.com/watch?v=ya-733fydeI',
-    'https://youtu.be/6CE0mfAJn1E',
-    'https://youtu.be/GtlpjfNn6VM',
-    'https://youtu.be/38nZgYurFpw',
-    'https://youtu.be/c7NQiQRYgLs',
-    'https://youtu.be/jBamD9KG4Ug',
-    'https://youtu.be/n8iZl6qIuZw',
-    'https://youtu.be/15pnC9gmiIQ',
-] as const;
+import fs from 'fs';
+import path from 'path';
+import { StreamType } from '@discordjs/voice';
+import { optionalEnvironment } from '../environment';
 
-export function getRandomMan(): string {
-    return oceanManVideos[Math.floor(Math.random() * oceanManVideos.length)]!;
+export function getRandomMan(): { file: string; inputType: StreamType } {
+    const directory = path.resolve(optionalEnvironment('SONG_DIR') ?? 'songs');
+    if (!fs.existsSync(directory)) {
+        throw new Error(
+            `Song directory ${directory} is missing. Run npm run download-songs first.`
+        );
+    }
+    const songs = fs
+        .readdirSync(directory, { withFileTypes: true })
+        .filter(
+            (entry) => entry.isFile() && /\.(webm|ogg|opus)$/i.test(entry.name)
+        )
+        .map((entry) => path.join(directory, entry.name))
+        .filter((file) => fs.statSync(file).size > 0);
+    if (songs.length === 0) {
+        throw new Error(
+            `No songs found in ${directory}. Run npm run download-songs first.`
+        );
+    }
+    const file = songs[Math.floor(Math.random() * songs.length)]!;
+    return {
+        file,
+        inputType:
+            path.extname(file).toLowerCase() === '.webm'
+                ? StreamType.WebmOpus
+                : StreamType.OggOpus,
+    };
 }

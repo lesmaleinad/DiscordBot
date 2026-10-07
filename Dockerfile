@@ -15,19 +15,6 @@ COPY config ./config
 RUN npm run build \
     && npm prune --omit=dev
 
-FROM ${NODE_IMAGE} AS yt-dlp
-
-ARG YT_DLP_VERSION=2026.06.09
-ARG YT_DLP_SHA256=e5d57466682cfa9d61e9cf7c8a4f09b00f4a62af37d3bbdc4bcffdf63615feac
-
-RUN apt-get update \
-    && apt-get install --yes --no-install-recommends ca-certificates curl \
-    && curl --fail --location --silent --show-error \
-        "https://github.com/yt-dlp/yt-dlp/releases/download/${YT_DLP_VERSION}/yt-dlp" \
-        --output /usr/local/bin/yt-dlp \
-    && echo "${YT_DLP_SHA256}  /usr/local/bin/yt-dlp" | sha256sum --check --strict \
-    && chmod 0755 /usr/local/bin/yt-dlp
-
 FROM ${NODE_IMAGE} AS sherpa-model
 
 ARG SHERPA_MODEL_NAME=sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20
@@ -59,10 +46,10 @@ ENV NODE_ENV=production \
     SHERPA_MODEL_DIR=/app/models/sherpa-onnx-kws-zipformer-zh-en-3M-2025-12-20 \
     SHERPA_KEYWORDS_FILE=/app/config/keywords.txt \
     STATE_PATH=/var/lib/oceancurse/state.json \
-    YT_DLP_PATH=/usr/local/bin/yt-dlp
+    SONG_DIR=/songs
 
 RUN apt-get update \
-    && apt-get install --yes --no-install-recommends ca-certificates libgomp1 python3 \
+    && apt-get install --yes --no-install-recommends ca-certificates libgomp1 \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /app /var/lib/oceancurse \
     && chown -R node:node /app /var/lib/oceancurse
@@ -73,7 +60,6 @@ COPY --from=build --chown=node:node /app/dist ./dist
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --chown=node:node config ./config
 COPY --chown=node:node scripts/docker-healthcheck.js ./scripts/docker-healthcheck.js
-COPY --from=yt-dlp /usr/local/bin/yt-dlp /usr/local/bin/yt-dlp
 COPY --from=sherpa-model --chown=node:node /models ./models
 
 USER node

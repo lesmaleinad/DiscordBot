@@ -3,11 +3,9 @@ import {
     createAudioPlayer,
     createAudioResource,
     joinVoiceChannel,
-    StreamType,
 } from '@discordjs/voice';
 import { Client, VoiceChannel } from 'discord.js';
-import { spawn } from 'child_process';
-import { optionalEnvironment } from '../environment';
+import fs from 'fs';
 import { channelIsTextChannel, fetchChannel } from '../validators/channel';
 import { getRandomMan } from '../videos/getrandomman';
 import { errorFields, log } from '../diagnostics';
@@ -27,6 +25,9 @@ export interface PlaybackSession {
 }
 
 export function playOceanMan(voiceChannel: VoiceChannel): PlaybackSession {
+    // Select and open before joining voice so missing songs do not cause a reconnect.
+    const { file, inputType } = getRandomMan();
+    const audio = fs.createReadStream(file);
     let stop = (_reason: string) => false;
     const completion = new Promise<void>((resolve) => {
         const startedAt = Date.now();
@@ -38,37 +39,12 @@ export function playOceanMan(voiceChannel: VoiceChannel): PlaybackSession {
             selfDeaf: false,
         });
         const player = createAudioPlayer();
-        const link = getRandomMan();
-        const ytDlp =
-            optionalEnvironment('YT_DLP_PATH') ??
-            (process.platform === 'win32'
-                ? 'C:\\ProgramData\\OceanCurse\\bin\\yt-dlp.exe'
-                : 'yt-dlp');
         log.info('playback.started', {
             playbackId,
             guildId: voiceChannel.guildId,
             channelId: voiceChannel.id,
-            link,
+            file,
         });
-        const downloader = spawn(
-            ytDlp,
-            [
-                '--no-playlist',
-                '--quiet',
-                '--no-warnings',
-                '--js-runtimes',
-                `node:${process.execPath}`,
-                '--format',
-                'bestaudio[ext=webm][acodec^=opus]/bestaudio[ext=webm]/bestaudio',
-                '--output',
-                '-',
-                link,
-            ],
-            {
-                windowsHide: true,
-                stdio: ['ignore', 'pipe', 'pipe'],
-            }
-        );
 
         let settled = false;
         const finish = (reason: string, failed = false): boolean => {
@@ -79,11 +55,12 @@ export function playOceanMan(voiceChannel: VoiceChannel): PlaybackSession {
                 playbackId,
                 reason,
                 durationMs: Date.now() - startedAt,
-                link,
+                file,
             };
             if (failed) log.warn('playback.finished', fields);
             else log.info('playback.finished', fields);
-            if (!downloader.killed) downloader.kill();
+            player.stop(true);
+            audio.destroy();
             try {
                 connection.destroy();
             } catch (error) {
@@ -102,32 +79,13 @@ export function playOceanMan(voiceChannel: VoiceChannel): PlaybackSession {
             10 * 60 * 1000
         );
 
-        downloader.stderr.setEncoding('utf8');
-        downloader.stderr.on('data', (data: string) => {
-            const message = data.trim();
-            if (message) {
-                log.warn('playback.downloader_stderr', {
-                    playbackId,
-                    message,
-                });
-            }
-        });
-        downloader.on('error', (error) => {
-            log.error('playback.downloader_error', {
+        audio.on('error', (error) => {
+            log.error('playback.file_error', {
                 playbackId,
+                file,
                 ...errorFields(error),
             });
-            finish('downloader_error', true);
-        });
-        downloader.on('exit', (code, signal) => {
-            if (!settled && code !== 0) {
-                log.warn('playback.downloader_exit', {
-                    playbackId,
-                    exitCode: code,
-                    signal,
-                });
-                finish('downloader_exit', true);
-            }
+            finish('file_error', true);
         });
 
         connection.on('error', (error) => {
@@ -135,13 +93,9 @@ export function playOceanMan(voiceChannel: VoiceChannel): PlaybackSession {
                 playbackId,
                 ...errorFields(error),
             });
+            finish('connection_error', true);
         });
         connection.subscribe(player);
-        player.play(
-            createAudioResource(downloader.stdout, {
-                inputType: StreamType.WebmOpus,
-            })
-        );
         player.on(AudioPlayerStatus.Idle, () => finish('audio_player_idle'));
         player.on('error', (error) => {
             log.error('playback.player_error', {
@@ -150,6 +104,16 @@ export function playOceanMan(voiceChannel: VoiceChannel): PlaybackSession {
             });
             finish('audio_player_error', true);
         });
+        try {
+            player.play(createAudioResource(audio, { inputType }));
+        } catch (error) {
+            log.error('playback.resource_error', {
+                playbackId,
+                file,
+                ...errorFields(error),
+            });
+            finish('resource_error', true);
+        }
     });
 
     return { completion, stop };
