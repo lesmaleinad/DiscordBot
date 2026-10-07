@@ -14,8 +14,10 @@ npm run download-songs
 npm run download-songs -- C:\OceanCurse\songs
 ```
 
-The script contains the original 32 YouTube URLs and downloads Opus audio in
-WebM containers. `YT_DLP_PATH` selects the downloader executable; `SONG_DIR`
+The checked-in `songs.txt` contains the original 32 YouTube URLs, one per
+line. Edit that file to maintain the playlist; blank lines and lines beginning
+with `#` are ignored. The download script reads it relative to the repository,
+regardless of the working directory, and downloads Opus audio in WebM containers. `YT_DLP_PATH` selects the downloader executable; `SONG_DIR`
 sets the default output directory (otherwise `./songs`). An explicit command
 argument overrides that directory. Reruns skip completed, nonempty files and
 continue after individual failures, exiting nonzero if any song fails.
@@ -40,9 +42,9 @@ docker build --platform linux/amd64 --tag oceancurse:local .
 
 Runtime configuration:
 
-- `DISCORD_TOKEN_FILE`: mounted Discord token file.
-- `SHERPA_MODEL_DIR`: embedded model directory, set by the image.
-- `SONG_DIR`: read-only song directory, `/songs` in the image.
-- `STATE_PATH`: writable curse state file.
-- `HEALTH_FILE`: writable Discord readiness heartbeat. This checks connection
-  readiness; it does not verify the song library or audio playback.
+-   `DISCORD_TOKEN_FILE`: mounted Discord token file.
+-   `SHERPA_MODEL_DIR`: embedded model directory, set by the image.
+-   `SONG_DIR`: read-only song directory, `/songs` in the image.
+-   `STATE_PATH`: writable curse state file.
+-   `HEALTH_FILE`: writable Discord readiness heartbeat. This checks connection
+    readiness; it does not verify the song library or audio playback.

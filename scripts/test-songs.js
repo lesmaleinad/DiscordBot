@@ -54,6 +54,7 @@ async function runDownloader(directory, failedId) {
         fs.readFileSync(path.join(__dirname, 'download-songs.js'), 'utf8'),
         {
             URL,
+            __dirname,
             process: scriptProcess,
             console: {
                 log(message) {
@@ -102,6 +103,15 @@ test('downloader maintains 32 URLs, reports failures, retries and skips complete
     );
     try {
         const first = await runDownloader(directory, '38nZgYurFpw');
+        const playlist = fs
+            .readFileSync(path.join(__dirname, '..', 'songs.txt'), 'utf8')
+            .split(/\r?\n/)
+            .map((line) => line.trim())
+            .filter(Boolean);
+        assert.deepEqual(
+            first.calls.map((args) => args.at(-1)),
+            playlist
+        );
         assert.equal(first.calls.length, 32);
         assert.equal(new Set(first.calls.map((args) => args.at(-1))).size, 32);
         assert.equal(first.exitCode, 1);
